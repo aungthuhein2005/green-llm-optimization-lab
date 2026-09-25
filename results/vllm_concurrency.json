@@ -1,0 +1,51 @@
+{
+  "engine": "vllm",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "precision": "fp16",
+  "prompt": "Explain GPU parallel processing to a beginner in exactly three sentences.",
+  "results": [
+    {
+      "concurrency": 1,
+      "total_time_sec": 0.7847956440000416,
+      "average_latency_sec": 0.784666923000259,
+      "throughput_tokens_sec": 127.42170622954514,
+      "requests_per_sec": 1.2742170622954514,
+      "total_output_tokens": 100,
+      "individual_latencies": [
+        0.784666923000259
+      ]
+    },
+    {
+      "concurrency": 4,
+      "total_time_sec": 0.8507367050001449,
+      "average_latency_sec": 0.8486075199998595,
+      "throughput_tokens_sec": 470.18072412889705,
+      "requests_per_sec": 4.701807241288971,
+      "total_output_tokens": 400,
+      "individual_latencies": [
+        0.8505776109996077,
+        0.8500216100001126,
+        0.8438153779998174,
+        0.8500154809999003
+      ]
+    },
+    {
+      "concurrency": 8,
+      "total_time_sec": 0.6739213279997784,
+      "average_latency_sec": 0.6720551813750149,
+      "throughput_tokens_sec": 1187.0821812012202,
+      "requests_per_sec": 11.870821812012203,
+      "total_output_tokens": 800,
+      "individual_latencies": [
+        0.6738193709998086,
+        0.673265158999584,
+        0.6730418770002871,
+        0.6732293099998969,
+        0.664665781000167,
+        0.6724190160002763,
+        0.6729751950001628,
+        0.6730257419999361
+      ]
+    }
+  ]
+}

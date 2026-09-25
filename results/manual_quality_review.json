@@ -1,0 +1,62 @@
+{
+  "FP16": {
+    "explanation": {
+      "prompt": "Explain GPU parallel processing to a beginner in exactly three sentences.",
+      "output": " GPU parallel processing is the ability of a graphics processing unit (GPU) to process data simultaneously, allowing it to perform multiple calculations or tasks at once. This technique enables GPUs to handle complex computations and simulations more efficiently than traditional CPUs, making them ideal for scientific research, gaming, and other demanding applications where time-to-result is critical. By utilizing multiple cores and shared memory, GPUs can significantly speed up computational tasks, reducing overall processing time and improving accuracy. Additionally, they offer greater flexibility in programming and optimizing",
+      "rubric": {
+        "technical_correctness_0_to_2": 2,
+        "relevance_0_to_1": 1
+      },
+      "max_score": 3
+    },
+    "llm_concept": {
+      "prompt": "Explain the difference between the prefill phase and decoding phase in LLM inference.",
+      "output": " In the prefill phase, we fill in the model's parameters with a set of input-output pairs (x,y) where x is the input and y is the output. During this phase, we do not have access to any external data or knowledge about the context of the inputs.\n\nIn the decoding phase, on the other hand, we use the learned parameters to decode the input-output pairs into a sequence of tokens that can be understood by an end-to-end decoder. This involves using the learned embeddings",
+      "rubric": {
+        "technical_correctness_0_to_2": 1,
+        "completeness_0_to_1": 0.8
+      },
+      "max_score": 3
+    }
+  },
+  "INT8": {
+    "explanation": {
+      "prompt": "Explain GPU parallel processing to a beginner in exactly three sentences.",
+      "output": " GPU parallel processing is the ability of a graphics processing unit (GPU) to perform multiple tasks simultaneously, allowing for faster and more efficient computation compared to traditional CPU-based systems. This capability enables applications like video games, scientific simulations, and machine learning models to process large amounts of data much faster than would be possible with a single CPU. By utilizing multiple cores and threads within the GPU, it can handle complex calculations and operations that would otherwise require significant computational power on a single processor. Additionally, GPUs are highly",
+      "rubric": {
+        "technical_correctness_0_to_2": 1.8,
+        "relevance_0_to_1": 0.8
+      },
+      "max_score": 3
+    },
+    "llm_concept": {
+      "prompt": "Explain the difference between the prefill phase and decoding phase in LLM inference.",
+      "output": " In the prefill phase, we fill the model with a set of parameters that are used to generate text. During this phase, the model is trained on a large corpus of text data, which includes both training examples and test examples. The goal during the prefill phase is to learn the vocabulary and grammar rules of the language.\nIn the decoding phase, we use the learned model to generate text based on the input sequence. During this phase, the model takes an input sequence as input and generates a",
+      "rubric": {
+        "technical_correctness_0_to_2": 1.8,
+        "completeness_0_to_1": 0.5
+      },
+      "max_score": 3
+    }
+  },
+  "INT4": {
+    "explanation": {
+      "prompt": "Explain GPU parallel processing to a beginner in exactly three sentences.",
+      "output": " GPU parallel processing is the ability of a graphics processing unit (GPU) to process data simultaneously, allowing it to perform multiple tasks at once. This allows for faster rendering times and more efficient use of resources. To begin using GPU parallel processing, you need to understand that each thread on the GPU can be assigned to one or more threads on the CPU, which are then used to process data. You also need to know how to write code that takes advantage of this parallelism, such as by writing instructions",
+      "rubric": {
+        "technical_correctness_0_to_2": 1.8,
+        "relevance_0_to_1": 0.8
+      },
+      "max_score": 3
+    },
+    "llm_concept": {
+      "prompt": "Explain the difference between the prefill phase and decoding phase in LLM inference.",
+      "output": " In the prefill phase, what is the purpose of the model's input? What are the steps involved in this phase?\n\nIn the decoding phase, what is the purpose of the model's output? What are the steps involved in this phase?\nThe prefill phase is a critical step in the LLM inference process, as it sets up the environment for the decoding phase to work with. The purpose of the model's input in the prefill phase is to provide the necessary context and information needed for",
+      "rubric": {
+        "technical_correctness_0_to_2": 1.8,
+        "completeness_0_to_1": 0.5
+      },
+      "max_score": 3
+    }
+  }
+}

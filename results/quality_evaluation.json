@@ -1,0 +1,65 @@
+{
+  "FP16": {
+    "automatic": {
+      "reasoning": {
+        "score": 2,
+        "max_score": 2
+      },
+      "instruction_following": {
+        "score": 0,
+        "max_score": 2
+      },
+      "coding": {
+        "score": 0,
+        "max_score": 2
+      },
+      "total_score": 2,
+      "max_score": 6
+    },
+    "manual_score": null,
+    "final_score": null,
+    "final_max_score": 12
+  },
+  "INT8": {
+    "automatic": {
+      "reasoning": {
+        "score": 2,
+        "max_score": 2
+      },
+      "instruction_following": {
+        "score": 1,
+        "max_score": 2
+      },
+      "coding": {
+        "score": 0,
+        "max_score": 2
+      },
+      "total_score": 3,
+      "max_score": 6
+    },
+    "manual_score": null,
+    "final_score": null,
+    "final_max_score": 12
+  },
+  "INT4": {
+    "automatic": {
+      "reasoning": {
+        "score": 0,
+        "max_score": 2
+      },
+      "instruction_following": {
+        "score": 1,
+        "max_score": 2
+      },
+      "coding": {
+        "score": 0,
+        "max_score": 2
+      },
+      "total_score": 1,
+      "max_score": 6
+    },
+    "manual_score": null,
+    "final_score": null,
+    "final_max_score": 12
+  }
+}
