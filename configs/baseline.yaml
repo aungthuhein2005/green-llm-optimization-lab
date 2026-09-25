@@ -1,0 +1,12 @@
+model_name: Qwen/Qwen2.5-0.5B-Instruct
+precision: fp16
+
+generation:
+  max_new_tokens: 100
+  do_sample: false
+
+benchmark:
+  warmup_runs: 1
+  measured_runs: 3
+
+output_file: results/fp16.json

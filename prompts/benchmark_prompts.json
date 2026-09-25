@@ -1,0 +1,22 @@
+[
+  {
+    "id": "explanation",
+    "prompt": "Explain GPU parallel processing to a beginner in exactly three sentences."
+  },
+  {
+    "id": "reasoning",
+    "prompt": "A language model generates 240 tokens in 8 seconds. Calculate the generation throughput in tokens per second and show the calculation."
+  },
+  {
+    "id": "coding",
+    "prompt": "Write a Python function that returns the factorial of a non-negative integer."
+  },
+  {
+    "id": "instruction",
+    "prompt": "Give exactly three advantages of using GPUs for LLM inference. Do not provide explanations."
+  },
+  {
+    "id": "llm_concept",
+    "prompt": "Explain the difference between the prefill phase and decoding phase in LLM inference."
+  }
+]
