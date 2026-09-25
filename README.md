@@ -12,7 +12,7 @@ An end-to-end benchmarking lab for comparing **speed, latency, GPU power, energy
 [![Model](https://img.shields.io/badge/Model-Qwen2.5--0.5B--Instruct-7C3AED)](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct)
 [![vLLM](https://img.shields.io/badge/Serving-vLLM-2F80ED)](https://docs.vllm.ai/)
 
-[Key findings](#-key-findings) · [Results](#-benchmark-results) · [Quick start](#-quick-start) · [Methodology](#-methodology) · [Limitations](#-limitations)
+[Key findings](#-key-findings) · [Results](#-benchmark-results) · [Full findings](report/findings.md) · [Quick start](#-quick-start) · [Methodology](#-methodology) · [Limitations](#-limitations)
 
 </div>
 
