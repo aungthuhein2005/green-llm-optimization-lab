@@ -1,0 +1,14 @@
+model_name: Qwen/Qwen2.5-0.5B-Instruct
+
+server:
+  url: http://localhost:8000/v1/completions
+
+generation:
+  max_new_tokens: 100
+  temperature: 0
+
+benchmark:
+  warmup_runs: 1
+  measured_runs: 3
+
+output_file: results/vllm_fp16_c1.json
