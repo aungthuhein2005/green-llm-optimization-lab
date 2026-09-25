@@ -1,454 +1,153 @@
+<div align="center">
+
 # 🌱 Green LLM Optimization Lab
 
-A reproducible experimental project exploring the performance, memory, energy-efficiency, quality, and serving trade-offs involved in optimizing Large Language Model inference.
+### Measure what “efficient” really means for LLM inference.
 
-## Research Question
+An end-to-end benchmarking lab for comparing **speed, latency, GPU power, energy per token, output quality, and serving throughput** across FP16, INT8, INT4, and vLLM workloads.
 
-> **Can I make an LLM faster and more energy-efficient without significantly reducing its output quality?**
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-CUDA-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Hugging Face](https://img.shields.io/badge/🤗%20Hugging%20Face-Transformers-FFD21E)](https://huggingface.co/docs/transformers)
+[![Model](https://img.shields.io/badge/Model-Qwen2.5--0.5B--Instruct-7C3AED)](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct)
+[![vLLM](https://img.shields.io/badge/Serving-vLLM-2F80ED)](https://docs.vllm.ai/)
 
-Rather than building a new AI application, this project benchmarks different LLM inference configurations and studies how optimization techniques affect:
+[Key findings](#-key-findings) · [Results](#-benchmark-results) · [Quick start](#-quick-start) · [Methodology](#-methodology) · [Limitations](#-limitations)
 
-- Generation throughput
-- Latency
-- GPU memory
-- GPU power consumption
-- Energy per generated token
-- Output quality
-- Multi-user serving throughput
+</div>
 
 ---
 
-## Model
+## Why this project?
 
-The experiments use:
+Quantization is often presented as a simple route to faster, greener inference. In practice, lower precision can reduce power draw while increasing latency enough to use **more total energy**.
 
-**Qwen/Qwen2.5-0.5B-Instruct**
+This repository tests one central question:
 
-A small instruction-tuned model was intentionally selected so the experiments could run on consumer GPU hardware.
+> **Can an LLM become faster and more energy-efficient without meaningfully reducing output quality?**
 
----
+| Track | What is measured |
+|---|---|
+| **Quantization** | FP16 vs. bitsandbytes INT8 vs. NF4 INT4 |
+| **Performance** | Throughput, latency, and GPU memory |
+| **Energy** | GPU power, estimated energy, and joules per token |
+| **Quality** | Automatic checks and manual review across a shared prompt suite |
+| **Serving** | vLLM throughput and latency at 1, 4, and 8 concurrent requests |
 
-## Project Structure
+> [!IMPORTANT]
+> Optimization is a systems problem. Precision, kernels, hardware, execution time, batching, memory, and serving strategy all affect the outcome.
 
-```text
-green-llm-optimization-lab/
-│
-├── configs/
-│   ├── baseline.yaml
-│   ├── int8.yaml
-│   ├── int4.yaml
-│   └── serving.yaml
-│
-├── prompts/
-│   └── benchmark_prompts.json
-│
-├── scripts/
-│   ├── benchmark_fp16.py
-│   ├── benchmark_int8.py
-│   ├── benchmark_int4.py
-│   ├── benchmark_energy_fp16.py
-│   ├── benchmark_energy_int8.py
-│   ├── benchmark_energy_int4.py
-│   ├── benchmark_vllm.py
-│   ├── benchmark_concurrency.py
-│   ├── compare_results.py
-│   ├── compare_energy_results.py
-│   └── evaluate_quality.py
-│
-├── results/
-│   ├── fp16.json
-│   ├── int8.json
-│   ├── int4.json
-│   ├── energy_fp16.json
-│   ├── energy_int8.json
-│   ├── energy_int4.json
-│   ├── quality_evaluation.json
-│   ├── manual_quality_review.json
-│   ├── vllm_fp16_c1.json
-│   └── vllm_concurrency.json
-│
-├── report/
-│   └── findings.md
-│
-├── requirements.txt
-└── README.md
-```
+## ✨ Key findings
 
----
+1. **FP16 won on the tested local hardware.** It delivered the highest throughput, lowest latency, and lowest measured GPU energy per token.
+2. **Lower power did not mean lower energy.** INT8 drew about 59% less average GPU power but required much longer to generate, increasing energy per token by about 373%.
+3. **INT4 was the stronger quantized compromise.** It substantially outperformed INT8, but still did not beat FP16 on this small model and GPU.
+4. **Serving optimization produced the largest throughput gain.** vLLM aggregate throughput scaled from 127.42 to 1,187.08 tokens/s as concurrency increased from 1 to 8.
+5. **No consistent quality collapse was observed.** The small evaluation did not show systematic degradation from quantization, though the sample is too limited for broad claims.
 
-# Experiments
+## 📊 Benchmark results
 
-The project contains four main groups of experiments.
+### Local inference — RTX 4050 Laptop GPU
 
-## 1. Quantization
-
-Three inference configurations were evaluated:
-
-- FP16 baseline
-- INT8 using bitsandbytes
-- INT4 NF4 using bitsandbytes
-
-The same model, prompts, generation settings, and GPU were used for these experiments.
-
-The goal was to determine whether reducing model precision improves inference performance and resource efficiency.
-
----
-
-## 2. Energy Efficiency
-
-GPU power was sampled during inference using NVIDIA GPU telemetry.
-
-Approximate GPU energy consumption was calculated by integrating sampled power over generation time.
-
-The primary efficiency metric is:
-
-```text
-Energy per token = GPU energy consumed / generated tokens
-```
-
-This is more informative than power draw alone because a low-power configuration can still consume more total energy if inference takes significantly longer.
-
----
-
-## 3. LLM Serving
-
-The model was served using **vLLM** to investigate production-style inference.
-
-Concurrency levels tested:
-
-```text
-1 request
-4 concurrent requests
-8 concurrent requests
-```
-
-The experiment measured:
-
-- Aggregate tokens/second
-- Average request latency
-- Requests/second
-
-This demonstrates the effect of batching and concurrent workloads on GPU utilization.
-
----
-
-## 4. Output Quality
-
-A small prompt suite was used to test:
-
-- Explanation
-- Arithmetic reasoning
-- Coding
-- Instruction following
-- LLM inference concepts
-
-Automatic checks were combined with manual review.
-
-The quality experiment is exploratory and is not intended to replace a large-scale model evaluation benchmark.
-
----
-
-# Hardware
-
-Two environments were used.
-
-## Local Optimization Environment
-
-```text
-GPU: NVIDIA GeForce RTX 4050 Laptop GPU
-VRAM: 6 GB
-```
-
-Used for:
-
-- FP16 baseline
-- INT8
-- INT4
-- GPU memory experiments
-- Power measurements
-- Energy measurements
-- Output quality evaluation
-
-## Serving Environment
-
-```text
-GPU: NVIDIA Tesla T4
-VRAM: 15 GB
-Environment: Google Colab
-Inference Engine: vLLM
-```
-
-Used for:
-
-- vLLM inference
-- Concurrent request experiments
-- Continuous batching experiments
-
-> **Important:** Absolute Transformers and vLLM performance numbers should not be directly interpreted as an engine-only comparison because the experiments ran on different GPUs.
-
----
-
-# Results
-
-## Energy & Performance — RTX 4050
-
-| Configuration | Throughput | Avg. Power | Energy | Energy / Token | Latency |
-|---|---:|---:|---:|---:|---:|
-| **FP16** | **36.21 tok/s** | 18.24 W | **49.31 J** | **0.4931 J/token** | **2.765 s** |
-| INT8 | 3.22 tok/s | **7.44 W** | 233.42 J | 2.3342 J/token | 32.170 s |
-| INT4 NF4 | 17.31 tok/s | 9.97 W | 63.48 J | 0.6348 J/token | 6.522 s |
-
-### Changes Relative to FP16
-
-| Configuration | Throughput | Avg. Power | Energy / Token | Latency |
+| Precision | Throughput ↑ | Avg. power ↓ | Energy/token ↓ | Latency ↓ |
 |---|---:|---:|---:|---:|
-| INT8 | -91.12% | -59.21% | +373.40% | +1063.25% |
-| INT4 | -52.21% | -45.36% | +28.74% | +135.82% |
+| **FP16** | **36.21 tok/s** | 18.24 W | **0.4931 J/token** | **2.765 s** |
+| INT4 NF4 | 17.31 tok/s | 9.97 W | 0.6348 J/token | 6.522 s |
+| INT8 | 3.22 tok/s | **7.44 W** | 2.3342 J/token | 32.170 s |
 
-### Observation
+```text
+Energy per generated token
 
-Quantization substantially reduced instantaneous GPU power consumption.
+FP16  █████                     0.4931 J/token
+INT4  ██████                    0.6348 J/token
+INT8  ███████████████████████   2.3342 J/token
+```
 
-However, both quantized configurations generated tokens more slowly.
+The INT8 configuration used less instantaneous power, but its slower execution dominated the final energy cost: `Energy = Power × Time`.
 
-INT8 reduced average GPU power by approximately **59%**, but its large increase in execution time caused energy per token to increase by approximately **373%**.
+### vLLM serving — Tesla T4
 
-INT4 provided a better trade-off than INT8, but still consumed approximately **29% more energy per generated token** than FP16.
-
-For this particular model, GPU, and software configuration:
-
-> **FP16 provided the highest throughput, lowest latency, and lowest measured GPU energy per generated token.**
-
----
-
-# vLLM Serving Results
-
-Serving experiments were performed on a Tesla T4.
-
-| Concurrency | Throughput | Avg. Latency | Requests/sec |
+| Concurrent requests | Aggregate throughput ↑ | Avg. latency ↓ | Requests/s ↑ |
 |---:|---:|---:|---:|
 | 1 | 127.42 tok/s | 0.785 s | 1.27 |
 | 4 | 470.18 tok/s | 0.849 s | 4.70 |
-| 8 | **1187.08 tok/s** | **0.672 s** | **11.87** |
+| **8** | **1,187.08 tok/s** | **0.672 s** | **11.87** |
 
-Increasing concurrency from 1 to 8 increased aggregate output throughput by approximately:
+At concurrency 8, aggregate throughput was **9.32×** the single-request result. The workload had not reached an obvious saturation point.
 
-```text
-9.32×
-```
+> [!NOTE]
+> Local Transformers and vLLM measurements were collected on different GPUs. Treat them as separate experiments, not as a direct engine-to-engine comparison.
 
-The workload had not yet reached an obvious saturation point at concurrency 8.
+## 🧪 Experiment design
 
-These results demonstrate how an inference engine can use batching to increase GPU utilization when multiple sequences are active.
+All experiments use [`Qwen/Qwen2.5-0.5B-Instruct`](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct). The small instruction-tuned model keeps the lab accessible on consumer hardware.
 
----
+| Environment | Hardware | Used for |
+|---|---|---|
+| **Local** | NVIDIA RTX 4050 Laptop GPU, 6 GB VRAM | FP16, INT8, INT4, memory, power, energy, quality |
+| **Serving** | NVIDIA Tesla T4, 15 GB VRAM, Google Colab | vLLM and concurrency benchmarks |
 
-# Quality Evaluation
+The lab evaluates:
 
-The same benchmark prompts were used across FP16, INT8, and INT4.
+- **Performance:** output tokens per second and end-to-end generation latency
+- **Energy:** sampled NVIDIA GPU power integrated over generation time
+- **Efficiency:** GPU joules divided by generated tokens
+- **Quality:** shared deterministic prompt suite with automatic and manual review
+- **Serving:** aggregate throughput, average request latency, and requests per second
 
-The small evaluation did **not show consistent evidence that quantization caused systematic output-quality degradation**.
+## 🚀 Quick start
 
-However, several outputs from all configurations contained weaknesses, particularly when explaining the difference between LLM prefill and decoding.
-
-Because only a small number of prompts were evaluated, quality results should be considered exploratory.
-
-A larger benchmark would be required to make strong claims about quality retention.
-
----
-
-# Key Findings
-
-### 1. Lower precision does not automatically mean faster inference
-
-Although INT8 and INT4 reduce model weight precision, the quantized configurations were slower than FP16 in this experiment.
-
-Quantization/dequantization overhead, GPU architecture, kernels, and model size all affect actual performance.
-
-### 2. Lower GPU power does not necessarily mean lower energy
-
-Energy depends on both power and execution time:
-
-```text
-Energy = Power × Time
-```
-
-INT8 consumed substantially less instantaneous power but ran much longer, resulting in significantly higher energy consumption per generated token.
-
-### 3. FP16 was the most energy-efficient local configuration
-
-For Qwen2.5-0.5B-Instruct on the RTX 4050 Laptop GPU:
-
-```text
-FP16: 0.4931 J/token
-INT4: 0.6348 J/token
-INT8: 2.3342 J/token
-```
-
-### 4. INT4 was a better compromise than INT8
-
-INT4 was significantly faster and more energy-efficient than INT8, although it still did not outperform FP16.
-
-### 5. Serving optimization can produce large throughput gains
-
-vLLM throughput increased substantially when concurrency increased.
-
-This demonstrates that optimization is not limited to model precision.
-
-**Request scheduling, batching, KV-cache management, and GPU utilization are also important optimization dimensions.**
-
-### 6. A model fitting in VRAM does not guarantee a serving engine will fit
-
-The Qwen model could run locally using Hugging Face Transformers on the 6 GB RTX 4050.
-
-However, attempts to run vLLM locally encountered GPU-memory limitations during engine initialization.
-
-Serving engines require additional memory for components such as:
-
-- KV cache
-- runtime buffers
-- scheduling infrastructure
-- execution structures
-
-The serving experiment was therefore moved to a Tesla T4 with 15 GB VRAM.
-
----
-
-# Reproducing the Experiments
-
-## 1. Clone the Repository
+### 1. Clone and create an environment
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/green-llm-optimization-lab.git
+git clone https://github.com/aungthuhein2005/green-llm-optimization-lab.git
 cd green-llm-optimization-lab
+python -m venv .venv
 ```
-
-## 2. Create a Python Environment
-
-Windows example:
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\activate
+# Windows
+.venv\Scripts\Activate.ps1
 ```
 
-Linux:
-
 ```bash
-python3 -m venv .venv
+# Linux/macOS
 source .venv/bin/activate
 ```
 
-## 3. Install Dependencies
+### 2. Install dependencies
 
-Install a CUDA-compatible PyTorch build appropriate for your system first.
-
-Then install the remaining dependencies:
+Install the [PyTorch build](https://pytorch.org/get-started/locally/) matching your CUDA environment, then run:
 
 ```bash
-pip install transformers accelerate bitsandbytes pyyaml
+pip install -r requirements.txt
+pip install bitsandbytes pynvml
 ```
 
----
-
-# Run FP16 Baseline
+### 3. Run the benchmarks
 
 ```bash
+# Performance and quantization
 python scripts/benchmark_fp16.py
-```
-
-Output:
-
-```text
-results/fp16.json
-```
-
----
-
-# Run INT8
-
-```bash
 python scripts/benchmark_int8.py
-```
-
-Output:
-
-```text
-results/int8.json
-```
-
----
-
-# Run INT4
-
-```bash
 python scripts/benchmark_int4.py
-```
-
-Output:
-
-```text
-results/int4.json
-```
-
----
-
-# Compare Quantization Results
-
-```bash
 python scripts/compare_results.py
-```
 
----
-
-# Energy Experiments
-
-Run:
-
-```bash
+# Energy
 python scripts/benchmark_energy_fp16.py
 python scripts/benchmark_energy_int8.py
 python scripts/benchmark_energy_int4.py
-```
-
-Then compare:
-
-```bash
 python scripts/compare_energy_results.py
-```
 
-Results are written to:
-
-```text
-results/energy_fp16.json
-results/energy_int8.json
-results/energy_int4.json
-```
-
----
-
-# Quality Evaluation
-
-Run:
-
-```bash
+# Quality
 python scripts/evaluate_quality.py
 ```
 
-This creates:
+Results are written to [`results/`](results/).
 
-```text
-results/quality_evaluation.json
-results/manual_quality_review.json
-```
+## ⚡ vLLM serving
 
-The second file is intended for human review of open-ended model outputs.
-
----
-
-# vLLM Serving
-
-Start the vLLM server:
+Start an OpenAI-compatible server:
 
 ```bash
 vllm serve Qwen/Qwen2.5-0.5B-Instruct \
@@ -459,103 +158,98 @@ vllm serve Qwen/Qwen2.5-0.5B-Instruct \
   --port 8000
 ```
 
-Then run the single-request benchmark:
+Then run:
 
 ```bash
 python scripts/benchmark_vllm.py
-```
-
-And the concurrency benchmark:
-
-```bash
 python scripts/benchmark_concurrency.py
 ```
 
----
+> [!TIP]
+> vLLM needs memory beyond model weights for its KV cache, runtime buffers, scheduler, and execution structures. A model that fits with Transformers may still fail during serving-engine initialization.
 
-# Methodology Notes
+## 🗂️ Repository structure
 
-For reproducibility:
+```text
+green-llm-optimization-lab/
+├── configs/       # Precision and serving configurations
+├── notebooks/     # Interactive experiments
+├── prompts/       # Shared benchmark prompt suite
+├── report/        # Detailed findings
+├── results/       # Raw benchmark and evaluation outputs
+├── scripts/       # Benchmark, comparison, and evaluation tools
+├── requirements.txt
+└── README.md
+```
 
-- The same prompt set is used across precision configurations.
+<details>
+<summary><strong>Benchmark scripts</strong></summary>
+
+| Script | Purpose |
+|---|---|
+| `benchmark_fp16.py` | FP16 baseline |
+| `benchmark_int8.py` | bitsandbytes INT8 inference |
+| `benchmark_int4.py` | bitsandbytes NF4 INT4 inference |
+| `benchmark_energy_*.py` | Power sampling and energy measurement |
+| `compare_results.py` | Performance comparison |
+| `compare_energy_results.py` | Energy comparison |
+| `evaluate_quality.py` | Automatic checks and manual-review output |
+| `benchmark_vllm.py` | Single-request vLLM benchmark |
+| `benchmark_concurrency.py` | Concurrent vLLM workload |
+
+</details>
+
+## 🔬 Methodology
+
+- Every precision configuration uses the same model and prompt set.
 - Generation is deterministic where possible.
-- Each benchmark includes GPU warm-up.
-- CUDA synchronization is performed before recording elapsed time.
-- Quantization experiments use the same local GPU.
-- Energy measurements sample NVIDIA GPU power telemetry during generation.
-- Serving experiments keep the same model while varying request concurrency.
+- Benchmarks include a GPU warm-up pass.
+- CUDA is synchronized before elapsed time is recorded.
+- Local quantization experiments run on the same GPU.
+- GPU power is sampled during generation and integrated over time.
+- Serving experiments hold the model constant while changing concurrency.
+
+The core efficiency metric is:
+
+```text
+Energy per token = estimated GPU energy consumed / generated tokens
+```
+
+This is more useful than power alone because a low-power configuration may run long enough to consume more total energy.
+
+## ⚠️ Limitations
+
+- Measurements estimate **GPU-side energy**, not full-system wall power.
+- Quantization and serving experiments use different GPUs.
+- The tested model has only about 0.5B parameters.
+- Quality evaluation uses a small custom prompt set.
+- Only bitsandbytes INT8 and NF4 INT4 are evaluated; GPTQ and AWQ are not included.
+- Serving concurrency is tested only through eight requests, before a clear saturation point.
+- Results are hardware- and software-specific and should not be generalized without more experiments.
+
+## 🧭 Roadmap
+
+- [ ] Benchmark 1B–7B parameter models
+- [ ] Add BF16, GPTQ, and AWQ
+- [ ] Measure time to first token (TTFT) and time per output token (TPOT)
+- [ ] Find the vLLM saturation point at higher concurrency
+- [ ] Measure full-system wall power
+- [ ] Repeat energy trials and report variance or confidence intervals
+- [ ] Evaluate established quality benchmarks
+- [ ] Compare GPU architectures and optimized quantized runtimes
+
+## 💡 Takeaway
+
+For `Qwen2.5-0.5B-Instruct` on the tested RTX 4050 Laptop GPU, quantization reduced average power but did not improve speed or energy per token. FP16 delivered the best local balance, while vLLM batching and concurrency delivered the strongest throughput gains in the separate serving experiment.
+
+> **Green inference is not the precision with the smallest number. It is the configuration that performs the required work with the best measured system-level trade-off.**
 
 ---
 
-# Limitations
+<div align="center">
 
-This project has several important limitations:
+Built as a hands-on study of efficient LLM inference, GPU performance, quantization, and production serving.
 
-1. Quantization and vLLM serving experiments were performed on different GPUs.
-2. Energy measurements represent estimated **GPU-side energy**, not full-system wall power.
-3. The model contains only approximately 0.5B parameters.
-4. The quality benchmark contains only a small number of prompts.
-5. Only bitsandbytes INT8 and NF4 INT4 quantization were evaluated.
-6. GPTQ and AWQ were not benchmarked.
-7. Serving concurrency was tested only up to eight requests.
-8. The serving saturation point was not identified.
-9. Energy measurements should be repeated across multiple trials to estimate variance.
-10. Results should not be generalized to larger models or different GPU architectures without additional experiments.
+If this project helps your research, consider giving it a ⭐.
 
----
-
-# Conclusion
-
-The experiments show that **LLM optimization is a system-level problem**.
-
-Reducing model precision alone did not make inference faster or more energy-efficient in the tested environment.
-
-Although INT8 and INT4 reduced average GPU power consumption, their slower generation speeds increased total energy consumption per token.
-
-For the tested Qwen2.5-0.5B-Instruct model on an RTX 4050 Laptop GPU, **FP16 achieved the best measured combination of throughput, latency, and GPU energy efficiency**.
-
-Separately, the vLLM experiments demonstrated that serving optimizations such as batching and concurrency can dramatically increase aggregate throughput.
-
-The central finding of this project is therefore:
-
-> **Green LLM inference cannot be optimized using a single metric. Model precision, execution speed, GPU power, memory usage, output quality, batching, and serving configuration must be evaluated together.**
-
----
-
-## Future Work
-
-Potential extensions include:
-
-- Test larger 1B–7B parameter models
-- Benchmark GPTQ and AWQ
-- Compare BF16 with FP16
-- Measure TTFT and TPOT
-- Find the vLLM saturation point with higher concurrency
-- Measure full-system wall power
-- Run multiple energy trials and calculate confidence intervals
-- Test optimized quantized inference engines
-- Compare additional GPUs
-- Use established quality benchmarks instead of a small custom prompt set
-- Measure KV-cache memory under different context lengths
-
----
-
-## Technologies
-
-- Python
-- PyTorch
-- Hugging Face Transformers
-- bitsandbytes
-- vLLM
-- CUDA
-- NVIDIA GPU telemetry
-- Google Colab
-- WSL2
-
----
-
-## Purpose
-
-This repository was created as a hands-on study of **LLM inference optimization, GPU performance, quantization, energy efficiency, and production model serving**.
-
-It is intended as an experimental learning project rather than a production benchmarking suite.
+</div>
